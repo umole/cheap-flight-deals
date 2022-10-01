@@ -11,7 +11,7 @@ class FlightSearch:
     def get_destination_code(self, city_name):
         location_url = f"{TEQUILA_ENDPOINT}/locations/query"
         headers = {
-            "apikey": TEQUILA_ENDPOINT
+            "apikey": TEQUILA_API_KEY
         }
         query = {
             "term": city_name,
@@ -19,5 +19,7 @@ class FlightSearch:
         }
         response = requests.get(url=location_url, headers=headers, params=query)
         flight_search_result = response.json()
-        return flight_search_result
+        flight_location = flight_search_result['locations']
+        code = flight_location[0]['code']
+        return code
 
