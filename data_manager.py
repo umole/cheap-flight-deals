@@ -27,3 +27,4 @@ class DataManager:
             }
             updated_response = requests.put(url=f"{SHEETY_API_URL}/{id}", json=body)
             self.updated_results = updated_response.json()
+
