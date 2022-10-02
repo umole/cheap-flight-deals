@@ -1,7 +1,8 @@
-import requests
 from pprint import pprint
+import requests
 
-SHEETY_API_URL = "https://api.sheety.co/cd25bffb434ffa9714c3610ed74dbb3b/copyOfFlightDeals/prices"
+SHEETY_PRICES_ENDPOINT = YOUR SHEETY PRICES ENDPOINT
+
 
 class DataManager:
 
@@ -9,22 +10,20 @@ class DataManager:
         self.destination_data = {}
 
     def get_destination_data(self):
-        sheety_url = SHEETY_API_URL
-        response = requests.get(url=sheety_url)
-        result = response.json()
-        self.destination_data = result["prices"]
+        response = requests.get(url=SHEETY_PRICES_ENDPOINT)
+        data = response.json()
+        self.destination_data = data["prices"]
         return self.destination_data
 
-    def update_iatacode(self):
-        for each_city in self.destination_data:
-            id = each_city["id"]
-            body = {
+    def update_destination_codes(self):
+        for city in self.destination_data:
+            new_data = {
                 "price": {
-                    "iataCode": each_city['iataCode'],
-                   # "id": each_city["id"],
-                   # "lowestPrice": each_city["lowestPrice"],
+                    "iataCode": city["iataCode"]
                 }
             }
-            updated_response = requests.put(url=f"{SHEETY_API_URL}/{id}", json=body)
-            self.updated_results = updated_response.json()
-
+            response = requests.put(
+                url=f"{SHEETY_PRICES_ENDPOINT}/{city['id']}",
+                json=new_data
+            )
+            print(response.text)

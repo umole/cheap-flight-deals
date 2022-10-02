@@ -1,44 +1,32 @@
-#This file will need to use the DataManager,FlightSearch, FlightData, NotificationManager classes to achieve the program requirements.
-
+from datetime import datetime, timedelta
 from data_manager import DataManager
-from pprint import pprint
-from flight_data import FlightData
+from flight_search import FlightSearch
 from notification_manager import NotificationManager
 
 data_manager = DataManager()
-#flight_search = FlightSearch()
-#updated_sheet = data_manager.update_iatacode()
 sheet_data = data_manager.get_destination_data()
+flight_search = FlightSearch()
+notification_manager = NotificationManager()
 
-if sheet_data[0]['iataCode'] == '':
-    from flight_search import FlightSearch
-    flight_search = FlightSearch()
+ORIGIN_CITY_IATA = "LON"
+
+if sheet_data[0]["iataCode"] == "":
     for row in sheet_data:
-        row['iataCode'] = flight_search.get_destination_code(row['city'])
-    pprint(sheet_data)
-
+        row["iataCode"] = flight_search.get_destination_code(row["city"])
     data_manager.destination_data = sheet_data
-    update_data = data_manager.update_iatacode()
+    data_manager.update_destination_codes()
 
-flight_data = FlightData()
-flights = flight_data.search_for_cheap_flights()
-for trip in flights:
-    price = trip['price']
-    city_from = trip['cityFrom']
-    city_to = trip['cityTo']
-    flight_time = trip['local_departure'].split("T", 1)[0]
-    #split_time = flight_time.split("T")
+tomorrow = datetime.now() + timedelta(days=1)
+six_month_from_today = datetime.now() + timedelta(days=(6 * 30))
 
-    if price < sheet_data[0]['lowestPrice']:
-        notification_manager = NotificationManager()
-        notification_manager.send_notification(f"Cheap flight available. Only {price} EUR instead of {sheet_data['lowestPrice']}"
-                                               f" EUR from {city_from} to {city_to} on {flight_time}")
-
-    #print(f"{price} EUR, from {city_from}, to  {city_to}. {flight_time}")
-#pprint(flights)
-
-
-
-
-
-
+for destination in sheet_data:
+    flight = flight_search.check_flights(
+        ORIGIN_CITY_IATA,
+        destination["iataCode"],
+        from_time=tomorrow,
+        to_time=six_month_from_today
+    )
+    if flight.price < destination["lowestPrice"]:
+        notification_manager.send_sms(
+            message=f"Low price alert! Only £{flight.price} to fly from {flight.origin_city}-{flight.origin_airport} to {flight.destination_city}-{flight.destination_airport}, from {flight.out_date} to {flight.return_date}."
+        )
